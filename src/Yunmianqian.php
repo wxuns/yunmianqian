@@ -10,6 +10,7 @@
 namespace Wxuns\Yunmianqian;
 
 use GuzzleHttp\Client;
+use function PHPSTORM_META\type;
 use Wxuns\Yunmianqian\Exceptions\HttpException;
 use Wxuns\Yunmianqian\Exceptions\InvalidArgumentException;
 use Wxuns\Yunmianqian\Exceptions\MissArgumentException;
@@ -50,19 +51,18 @@ class Yunmianqian
         $options['multiple'] = [
             'headers' => ['content-type'=>'application/x-www-form-urlencoded']
         ];
-        if (!in_array($cache,[true,false])){
+        if (!is_bool($cache)){
             throw new InvalidArgumentException('Invalid response cache:'.$cache);
         }
         if (!in_array($price_type,['floor','ceil'])){
             throw new InvalidArgumentException('Invalid response price_type:'.$price_type);
         }
-        $url = \sprintf('https://open.yunmianqian.com/api/pay?order_cache=%s&price_type=%s',$cache,$price_type);
+        $url = \sprintf('https://open.yunmianqian.com/api/pay?order_cache=%s&price_type=%s',$cache?"true":"false",$price_type);
 
         try{
             $response = $this->getHttpClient()->request('POST',$url,[
                 'form_params' =>array_filter($options),
             ])->getBody()->getContents();
-
             return json_decode($response);
         }catch (\Exception $e){
             throw new HttpException($e->getMessage(),$e->getCode(),$e);
