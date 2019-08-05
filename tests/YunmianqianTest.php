@@ -55,30 +55,32 @@ class YunmianqianTest extends TestCase
             'out_order_sn'=>1111,
             'name'=>'测试商品',
             'pay_way'=>'alipay',
-            'price'=>10,
+            'price'=>1,
             'notify_url'=>'https://...'
         ],true,'foo');
         $this->fail('Failed to assert pricetype throw exception with invalid argument.');
     }
 
+    /**
+     * 模拟下订单测试
+     */
     public function testOrder()
     {
-        $response = new Response(200,[],'{"code":200,"msg":"success","data":{}}');
-        $client = \Mockery::mock(Client::class."['request']");
-        $options = [
+        $response = new Response(200, [], '{"success": true}');
+        $client = \Mockery::mock(Client::class);
+        $cache = true;$price_type = 'floor';
+        $client->shouldReceive('post')
+            ->andReturn($response);
+        $ymq = \Mockery::mock(Yunmianqian::class,['app_id','app_secret'])->makePartial();
+        $ymq->allows()->getHttpClient()->andReturn($client);
+
+        $this->assertSame('{"success": true}', $ymq->order([
             'out_order_sn'=>1111,
             'name'=>'测试商品',
             'pay_way'=>'alipay',
-            'price'=>10,
+            'price'=>1,
             'notify_url'=>'https://...',
             'sign'=>'sign'
-        ];
-        $cache = true;$price_type = 'floor';
-        $url = \sprintf('https://open.yunmianqian.com/api/pay?order_cache=true&price_type=%s',$price_type);
-
-        $client->expects()->request('POST',$url,['form_params' =>array_filter($options)])->andReturn($response);
-        $ymq = \Mockery::mock(Yunmianqian::class,['app_id','app_secret'])->makePartial();
-//        $ymq->allows()->getHttpClient()->andReturn($client);
-        $this->assertSame(['success' => true], $ymq->order($options,$cache,$price_type));
+        ],$cache,$price_type));
     }
 }

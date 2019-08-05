@@ -19,22 +19,16 @@ class Yunmianqian
 {
 	protected $app_id;
 	protected $app_secret;
-    protected $guzzleOptions = [];
 
 	public function __construct($app_id,$app_secret)
 	{
-		$this->appid = $app_id;
+		$this->app_id = $app_id;
 		$this->app_secret = $app_secret;
 	}
 
 	public function getHttpClient()
     {
-        return new Client($this->guzzleOptions);
-    }
-
-    public function setGuzzleOptions(array $options)
-    {
-        $this->guzzleOptions = $options;
+        return new Client(['base_uri' => 'https://open.yunmianqian.com']);
     }
 
     /**
@@ -57,13 +51,10 @@ class Yunmianqian
         if (!in_array($price_type,['floor','ceil'])){
             throw new InvalidArgumentException('Invalid response price_type:'.$price_type);
         }
-        $url = \sprintf('https://open.yunmianqian.com/api/pay?order_cache=%s&price_type=%s',$cache?"true":"false",$price_type);
-
+        $url = \sprintf('/api/pay?order_cache=%s&price_type=%s',$cache?"true":"false",$price_type);
         try{
-            $response = $this->getHttpClient()->request('POST',$url,[
-                'form_params' =>array_filter($options),
-            ])->getBody()->getContents();
-            return json_decode($response);
+            $response = $this->getHttpClient()->post($url,['form_params'=>array_filter($options)])->getBody()->getContents();
+            return $response;
         }catch (\Exception $e){
             throw new HttpException($e->getMessage(),$e->getCode(),$e);
         }
