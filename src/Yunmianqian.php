@@ -92,6 +92,29 @@ class Yunmianqian
             throw new HttpException($e->getMessage(),$e->getCode(),$e);
         }
     }
+
+    /**
+     * 云端状态查询
+     * @return string
+     * @throws HttpException
+     */
+    public function cloudStatus()
+    {
+        try{
+            $response = $this->getHttpClient()->post('/api/cloud',[
+                'form_params'=>[
+                    'app_id'   => $this->app_id,
+                    'sign'     => md5($this->app_id.$this->app_secret),
+                    'multiple' => [
+                        'headers' => ['content-type'=>'application/x-www-form-urlencoded']
+                    ]
+                ]
+            ])->getBody()->getContents();
+            return $response;
+        }catch (\Exception $e){
+            throw new HttpException($e->getMessage(),$e->getCode(),$e);
+        }
+    }
     /**
      * To sign.
      * @param $optins

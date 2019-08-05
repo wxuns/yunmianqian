@@ -115,4 +115,20 @@ class YunmianqianTest extends TestCase
         //检测返回值
         $this->assertSame('{"success": true}', $ymq->queryOrder(11111111));
     }
+    /**
+     * 云端状态查询测试
+     */
+    public function testCloudStatus()
+    {
+        //模拟返回值
+        $response = new Response(200, [], '{"success": true}');
+        //客户端模拟，代替queryOrder方法中的客户端，不是真的请求
+        $client = \Mockery::mock(Client::class);
+        $client->shouldReceive('post')
+            ->andReturn($response);
+        $ymq = \Mockery::mock(Yunmianqian::class,['app_id','app_secret'])->makePartial();
+        $ymq->allows()->getHttpClient()->andReturn($client);
+        //检测返回值
+        $this->assertSame('{"success": true}', $ymq->cloudStatus());
+    }
 }
