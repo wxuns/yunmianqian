@@ -59,7 +59,39 @@ class Yunmianqian
             throw new HttpException($e->getMessage(),$e->getCode(),$e);
         }
     }
+    public function handleScannedNotify($func)
+    {
 
+    }
+
+    /**
+     * 订单查询
+     * @param $order_sn
+     * @return string
+     * @throws HttpException
+     * @throws InvalidArgumentException
+     */
+    public function queryOrder($order_sn)
+    {
+        if (!$order_sn){
+            throw new InvalidArgumentException('Invalid response order_sn.');
+        }
+        try{
+            $response = $this->getHttpClient()->post('/api/query',[
+                'form_params'=>[
+                    'app_id'   => $this->app_id,
+                    'order_sn' => $order_sn,
+                    'sign'     => $this->querySign($order_sn),
+                    'multiple' => [
+                        'headers' => ['content-type'=>'application/x-www-form-urlencoded']
+                    ]
+                ]
+            ])->getBody()->getContents();
+            return $response;
+        }catch (\Exception $e){
+            throw new HttpException($e->getMessage(),$e->getCode(),$e);
+        }
+    }
     /**
      * To sign.
      * @param $optins
@@ -72,5 +104,15 @@ class Yunmianqian
         }catch (\Exception $e){
             throw new MissArgumentException('Invalid options.');
         }
+    }
+
+    /**
+     * 订单查询签名
+     * @param $order_sn
+     * @return string
+     */
+    public function querySign($order_sn)
+    {
+        return md5($this->app_id.$order_sn.$this->app_id);
     }
 }
