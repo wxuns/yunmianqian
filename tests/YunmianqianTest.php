@@ -13,6 +13,7 @@ use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Response;
 use PHPUnit\Framework\TestCase;
 use Wxuns\Yunmianqian\Exceptions\InvalidArgumentException;
+use Wxuns\Yunmianqian\Exceptions\InvalidSignatureException;
 use Wxuns\Yunmianqian\Exceptions\MissArgumentException;
 use Wxuns\Yunmianqian\Yunmianqian;
 
@@ -130,5 +131,22 @@ class YunmianqianTest extends TestCase
         $ymq->allows()->getHttpClient()->andReturn($client);
         //检测返回值
         $this->assertSame('{"success": true}', $ymq->cloudStatus());
+    }
+
+    /**
+     * 检测回调签名是否正确
+     * @throws InvalidSignatureException
+     */
+    public function testInvalidSignature()
+    {
+        $yunmianqian = new Yunmianqian('app_id','app_serect');
+        $this->expectException(InvalidSignatureException::class);
+        $this->expectExceptionMessage('Invalid notify.');
+        $yunmianqian->checkSign([]);
+        $this->fail('Failed to assert notify throw exception with invalid argument.');
+    }
+    public function testhandleScannedNotify()
+    {
+
     }
 }

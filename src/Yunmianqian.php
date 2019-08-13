@@ -13,6 +13,7 @@ use GuzzleHttp\Client;
 use function PHPSTORM_META\type;
 use Wxuns\Yunmianqian\Exceptions\HttpException;
 use Wxuns\Yunmianqian\Exceptions\InvalidArgumentException;
+use Wxuns\Yunmianqian\Exceptions\InvalidSignatureException;
 use Wxuns\Yunmianqian\Exceptions\MissArgumentException;
 
 class Yunmianqian
@@ -59,9 +60,19 @@ class Yunmianqian
             throw new HttpException($e->getMessage(),$e->getCode(),$e);
         }
     }
-    public function handleScannedNotify($func)
+    public function handleScannedNotify(callable $callback)
     {
-
+        $notify = $_POST;
+        $this->checkSign($notify);
+        $handleResult = call_user_func($callback,$notify);
+        if (is_bool($handleResult)&&$handleResult){
+            return [
+                'return_code' => 'SUCCESS',
+                'return_msg' => 'OK',
+            ];
+        }else{
+            throw new HttpException('Invalid callback.');
+        }
     }
 
     /**
@@ -137,5 +148,23 @@ class Yunmianqian
     public function querySign($order_sn)
     {
         return md5($this->app_id.$order_sn.$this->app_id);
+    }
+
+    /**
+     * 检测回调签名
+     * @param $notify
+     * @return bool
+     * @throws InvalidSignatureException
+     */
+    public function checkSign($notify)
+    {
+        try{
+            $sign = md5($this->app_id.$notify['order_sn'].$notify['out_order_sn'].$notify['notify_count'].$notify['pay_way']
+                .$notify['price'].$notify['qr_type'].$notify['qr_price'].$notify['pay_price'].$notify['created_at'].$notify['paid_at'].(isset($notify['attach'])?$notify['attach']:'').$notify['server_time'].$this->app_secret);
+            return $sign != $notify['sign'];
+        }catch (\Exception $e){
+            throw new InvalidSignatureException('Invalid notify.');
+        }
+        return true;
     }
 }
